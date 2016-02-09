@@ -1,26 +1,5 @@
-# klondike.rpy - Klondike Solitaire
-# Copyright (C) 2008 PyTom <pytom@bishoujo.us>
-#
-# This software may be distributed in modified or unmodified form,
-# provided:
-#
-# (1) This complete license notice is retained.
-#
-# (2) This software and all software and data files distributed
-# alongside this software and intended to be loaded in the same
-# memory space may be redistributed without requirement for
-# payment, notification, or other forms of compensation.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#
-# Commercial licensing for this software is available, please
-# contact pytom@bishoujo.us for information.
+# dbl_klondike.rpy - Double Klondike Solitaire
+# Copyright (C) 2016 Susan <susan@thecatsweb.com>
 
 init python:
 
@@ -241,15 +220,52 @@ init python:
                 if self.tableau[i]:
                     self.table.set_faceup(self.tableau[i][-1], True)
 
+            all_faceup = True
+            for i in  self.foundations:
+                for c in  i:
+                    if not self.table.get_faceup(c):
+                        all_faceup=False
+                        
+            if all_faceup and len(self.stock)==0 and len(self.waste)==0:
+                cardsleft = True
+                while cardsleft:  
+                    cardsleft = False
+                    for tabby in self.tableau:
+                        if tabby:                
+                            card = tabby[-1]          
+                            cardsleft = True
+                            suit, rank, deck = card
+
+                            # If the card is an ace, find an open foundation and put it
+                            # there.
+                            if rank == 1:
+                                for i in self.foundations:
+                                    if not i:
+                                        i.append(card)
+                                        renpy.pause(0.5)
+                                        break
+
+                            # Otherwise, see if there's a foundation where we can put
+                            # the card.
+                            for i in self.foundations:
+                                if not i:
+                                    continue
+                                
+                                fsuit, frank, fdeck = i[-1]
+                                if suit == fsuit and rank == frank + 1:
+                                    i.append(card)
+                                    renpy.pause(0.5)
+            
+            
             # Check to see if any of the foundations has less than
             # 13 cards in it. If it does, return False. Otherwise,
             # return True.
             for i in self.foundations:
                 if len(i) != 13:
                     return rv
-
+                
             return "win"
-
+            
         # Sets things as sensitive (or not).
         def set_sensitive(self, value):
             self.table.set_sensitive(value)

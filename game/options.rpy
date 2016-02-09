@@ -24,6 +24,8 @@ init -1 python hide:
     ## running in a window.
 
     config.window_title = u"Solitaire Project"
+    
+    config.window_icon = "card/10.png"
 
     #########################################
     # Layouts
