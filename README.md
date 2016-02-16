@@ -1,2 +1,2 @@
 # SolitaireProject
-Make solitair games in Ren'py
+Make solitaire games in Ren'py
