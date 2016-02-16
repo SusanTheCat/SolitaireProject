@@ -1,0 +1,1 @@
+{"layout": null, "package": "com.thecatsweb.games.tsp", "include_pil": false, "numeric_version": "101", "expansion": false, "name": "The Solitaire Project", "source": false, "icon_name": "Solitaire", "version": "1.01", "target_version": 8, "permissions": ["VIBRATE"], "include_sqlite": false, "store": "none", "orientation": "sensorLandscape"}
