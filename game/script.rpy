@@ -1,12 +1,13 @@
 ﻿# You can place the script of your game in this file.
 
-
-    
-
 init python:
     
     import os
     #config.log = os.path.join(config.gamedir, "test.log")
+
+    # Set the default value.
+    if persistent.autofinish is None:
+        persistent.autofinish = True
     
     class ExplodeFactory: # the factory that makes the particles
         
@@ -31,7 +32,9 @@ init python:
             return [self.displayable]
     
     class ExplodeParticle:
-        
+ 
+           
+
         def __init__(self, theDisplayable, timeDelay):
             self.displayable = theDisplayable
             self.delay = timeDelay
@@ -74,7 +77,7 @@ label start:
 
     e "Welcome to the Solitaire Project. Let's play some solitaire!"
 
-    e "I might show up from time to time to give you some advice, but it's up to you if you want to take it."
+    e "If you want, I can try to give you some advice, but it's up to you if you want to take it."
 
     e "Good luck!"
   
@@ -85,28 +88,9 @@ label newgame:
     show eileen happy
     with dissolve
 
-    menu:    
-        e "What would you like to play?"
+    call screen game_choice
 
-        "Klondike (Deal 1)":
-            $ k = Klondike(1)
-        "Klondike (Deal 3)":
-            $ k = Klondike(3)
-        "Double Klondike (Deal 1)":
-            $ k = DblKlondike(1)
-        "Double Klondike (Deal 3)":
-            $ k = DblKlondike(3)
-        "Spider (4 suits)":
-            $ k = Spider(4)
-        "Spider (2 suits)":
-            $ k = Spider(2)
-        "Spider (1 suit)":
-            $ k = Spider(1)
-
-        "Quit for now":
-            e "Goodbye."
-            return 
-
+    $ k = _return
     e "Okay, here we go!"
     
     
@@ -205,4 +189,37 @@ label hint:
         e "I think something can go on the %(under)s."
     
     jump continue
+    
+
+    
+screen game_choice:
+
+
+
+    # Put the navigation columns in a three-wide grid.
+    grid 3 1:
+        xfill True
+        yalign 0.4
+        # The left column.
+        vbox:
+            frame:
+                has vbox
+                textbutton _("Klondike (Deal 1)") xfill True action Return(Klondike(1))
+                textbutton _("Klondike (Deal 3)") xfill True action Return(Klondike(3))
+            frame:
+                has vbox
+                textbutton _("Double Klondike (Deal 1)") xfill True action Return(DblKlondike(1))
+                textbutton _("Double Klondike (Deal 3)") xfill True action Return(DblKlondike(3))
+               
+        vbox:
+            frame:
+                has vbox 
+                textbutton _("Spider (4 suits)") xfill True action Return(Spider(4))
+                textbutton _("Spider (2 suits)") xfill True action Return(Spider(2))
+                textbutton _("Spider (1 suit)") xfill True action Return(Spider(1))
+                
+        vbox:
+            frame:
+                has vbox 
+                textbutton _("Canfield") xfill True action Return(Canfield())
 

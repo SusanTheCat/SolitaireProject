@@ -1,9 +1,9 @@
-# dbl_klondike.rpy - Double Klondike Solitaire
+# canfield.rpy - Double Klondike Solitaire
 # Copyright (C) 2016 Susan <susan@thecatsweb.com>
 
 init python:
 
-    class DblKlondike(object):
+    class Canfield(object):
 
         # We represent a card as a (suit, rank) tuple. The suit is one of the
         # following four constants, while the rank is 1 for ace, 2 for 2,
@@ -13,7 +13,7 @@ init python:
         HEART = 2
         DIAMOND = 3
         
-        def __init__(self, deal=3):
+        def __init__(self):
 
             # Constants that let us easily change where the game is
             # located.
@@ -23,31 +23,34 @@ init python:
             ROW_SPACING = 120
             CARD_XSPACING = 20
             CARD_YSPACING = 30
+            
+            TABLEAUS  = 4
+            
+            self.start_rank = 0
 
-            # Store the parameters.
-            self.deal = deal
             
             # Create the table, stock, and waste.
             self.table = t = Table(base="card/base.png", back="card/back.png")
-            self.stock = t.stack(LEFT, TOP, xoff=-0.5, yoff=0, click=True)
-            self.waste = t.stack(LEFT + COL_SPACING, TOP, xoff=CARD_XSPACING, drag=DRAG_TOP, show=self.deal, click=True)
+            self.stock = t.stack(LEFT+COL_SPACING*6, TOP+ROW_SPACING*3, xoff=0, yoff=0, click=True)
+            self.reserve = t.stack(LEFT, TOP, xoff=0, yoff=CARD_YSPACING, drag=DRAG_TOP, show=13, click=True)
+            self.waste = t.stack(LEFT+COL_SPACING*7, TOP+ROW_SPACING*3, xoff=CARD_XSPACING, drag=DRAG_TOP, show=3, click=True)
 
-            # The 8 foundation stacks.
+            # The 4 foundation stacks.
             self.foundations = [ ]
-            for i in range(0, 8):
-                s = t.stack(LEFT + COL_SPACING * (i + 3), TOP, xoff=0, yoff=0, drag=DRAG_TOP, drop=True)
+            for i in range(0, 4):
+                s = t.stack(LEFT + COL_SPACING * (i + 2), TOP, xoff=0, yoff=0, drag=DRAG_TOP, drop=True)
                 self.foundations.append(s)
 
-            # The 9 tableau stacks.
+            # The 4 tableau stacks.
             self.tableau = [ ]
-            for i in range(0, 9):
-                s = t.stack(LEFT + COL_SPACING + COL_SPACING * i, TOP + ROW_SPACING, xoff=0, yoff=CARD_YSPACING, drag=DRAG_ABOVE, click=True, drop=True)
+            for i in range(0, 4):
+                s = t.stack(LEFT + COL_SPACING * (i + 2), TOP + ROW_SPACING, xoff=0, yoff=CARD_YSPACING, drag=DRAG_ABOVE, click=True, drop=True)
                 self.tableau.append(s)
 
             # Create the stock and shuffle it.
             for rank in range(1, 14):
                 for suit in range(0, 4):
-                    for deck in range(0, 2):
+                    for deck in range(0, 1):
                         value = (suit, rank, deck)
                         t.card(value, "card/%d.png" % self.card_num(suit, rank))
                         t.set_faceup(value, False)
@@ -55,16 +58,33 @@ init python:
                     
             self.stock.shuffle()
             
+            # Deal out the reserve
+            for i in range(0, 13):
+                c = self.stock.deal()
+                self.reserve.append(c)       
+                self.table.set_faceup(self.reserve[-1], False) 
+            
+            self.table.set_faceup(self.reserve[-1], True)
+            
+            #deal first foundation
+            
+            c = self.stock.deal()
+            self.foundations[0].append(c)       
+            self.table.set_faceup(self.foundations[0][-1], True) 
+            
+            csuit, crank, cdeck = c
+                
+                
+            self.start_rank = crank
+            
+            
+            
             # Deal out the initial tableau.
-            for i in range(0, 9):
-                for j in range(i, 9):
-                    c = self.stock.deal()
-                    self.tableau[j].append(c)                    
+            for i in range(0, TABLEAUS):
+                c = self.stock.deal()
+                self.tableau[i].append(c)       
+                self.table.set_faceup(self.tableau[i][-1], True)             
 
-            # Ensure that the bottom of each tableau is faceup.
-            for i in range(0, 9):
-                if self.tableau[i]:
-                    self.table.set_faceup(self.tableau[i][-1], True)
 
 
         # This figures out the image filename for a given suit and rank.
@@ -83,14 +103,17 @@ init python:
             card = evt.drag_cards[0]
             cards = evt.drag_cards
             stack = evt.drop_stack
+            
+            #only drag one card UNLESS it is the whole stack
+            if len(cards) != 1 and len(cards) != len(evt.stack):
+                return False
 
             csuit, crank, cdeck = card
             
-            # If the stack is empty, allow a king to be dragged to it.
+            # If the stack is empty, allow any card to be dragged to it.
             if not stack:
-                if crank == 13:
-                    for i in cards:
-                        stack.append(i)
+                for i in cards:
+                    stack.append(i)
 
                 return "tableau_drag"
 
@@ -103,7 +126,7 @@ init python:
             bblack = (bsuit == self.SPADE) or (bsuit == self.CLUB)
 
             # Can we legally place the cards?
-            if (bblack != cblack) and (crank == brank - 1):
+            if (bblack != cblack) and (crank == brank - 1 or (crank == 13 and brank == 1)):
 
                 # Place the cards:
                 for i in cards:
@@ -132,7 +155,7 @@ init python:
                     
             # Otherwise, make sure we're dropping an ace.
             else:
-                if rank == 1:
+                if rank == self.start_rank:
                     evt.drop_stack.append(evt.drag_cards[0])
                     return "foundation_drag"
 
@@ -150,7 +173,7 @@ init python:
 
             # If the card is an ace, find an open foundation and put it
             # there.
-            if rank == 1:
+            if rank == self.start_rank:
                 for i in self.foundations:
                     if not i:
                         i.append(card)
@@ -164,7 +187,7 @@ init python:
                     continue
                 
                 fsuit, frank, fdeck = i[-1]
-                if suit == fsuit and rank == frank + 1:
+                if suit == fsuit and(rank == frank + 1 or (rank == 1 and frank == 13)):
                     i.append(card)
                     return "foundation_drag"
 
@@ -175,7 +198,7 @@ init python:
             # If there are cards in the stock, dispense up to three3
             # of them.
             if self.stock:
-                for i in range(0, self.deal):
+                for i in range(0,3):
                     if self.stock:
                         c = self.stock[-1]
                         self.table.set_faceup(c, True)
@@ -214,19 +237,21 @@ init python:
             elif evt.type == "doubleclick":
                 if (evt.stack in self.tableau) or (evt.stack is self.waste):
                     rv = self.tableau_doubleclick(evt)
-                    
-            # Ensure that the bottom card in each tableau is faceup.
-            for i in range(0, 9):
-                if self.tableau[i]:
-                    self.table.set_faceup(self.tableau[i][-1], True)
 
-            all_faceup = True
-            for i in  self.tableau:
-                for c in  i:
-                    if not self.table.get_faceup(c):
-                        all_faceup=False
+            #Fill and blank tableaus
+            if len(self.reserve) > 0:
+                for i in self.tableau:
+                    if not i:
+                        card = self.reserve[-1]
+                        self.table.set_faceup(card, True)
+                        i.append(card)
+
+                    
+            # Ensure that the bottom card in reserve is faceup.
+            if self.reserve:
+                self.table.set_faceup(self.reserve[-1], True)
                         
-            if persistent.autofinish and all_faceup and len(self.stock)==0 and len(self.waste)==0:
+            if persistent.autofinish and len(self.stock)==0 and len(self.waste)==0:
                 cardsleft = True
                 while cardsleft:  
                     cardsleft = False
@@ -236,9 +261,9 @@ init python:
                             cardsleft = True
                             suit, rank, deck = card
 
-                            # If the card is an ace, find an open foundation and put it
+                            # If the card is the staring rank, find an open foundation and put it
                             # there.
-                            if rank == 1:
+                            if rank == self.start_rank:
                                 for i in self.foundations:
                                     if not i:
                                         i.append(card)
@@ -252,7 +277,7 @@ init python:
                                     continue
                                 
                                 fsuit, frank, fdeck = i[-1]
-                                if suit == fsuit and rank == frank + 1:
+                                if suit == fsuit and (rank == frank + 1 or (rank == 1 and frank == 13)):
                                     i.append(card)
                                     renpy.pause(0.2)
                                     break
@@ -279,13 +304,13 @@ init python:
             usuit, urank, udeck = under
             osuit, orank, odeck = over
 
-            if orank == 1:
+            if orank == self.start_rank:
                 return False
             
             ublack = (usuit == self.SPADE) or (usuit == self.CLUB)
             oblack = (osuit == self.SPADE) or (osuit == self.CLUB)
 
-            if (oblack != ublack) and (orank == urank - 1):
+            if (oblack != ublack) and (orank == urank - 1 or (orank == 13 and urank == 1)):
                 return True
 
         # Returns the first faceup card in the stack.

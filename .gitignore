@@ -6,7 +6,11 @@
 saves/
 cache/
 *.rpyc
+log.txt
 
+
+
+https://github.com/photonstorm/phaser.git
 
 
 *.pydevproject
