@@ -8,6 +8,8 @@ cache/
 *.rpyc
 log.txt
 traceback.txt
+errors.txt
+.android.json
 
 
 

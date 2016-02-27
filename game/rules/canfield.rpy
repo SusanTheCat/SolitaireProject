@@ -149,7 +149,7 @@ init python:
             # sequence.
             if len(evt.drop_stack):
                 dsuit, drank, ddeck = evt.drop_stack[-1]
-                if suit == dsuit and rank == drank + 1:
+                if suit == dsuit and (rank == drank + 1 or (rank == 1 and drank == 13)):
                     evt.drop_stack.append(evt.drag_cards[0])
                     return "foundation_drag"
                     

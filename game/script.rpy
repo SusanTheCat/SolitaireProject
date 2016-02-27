@@ -199,7 +199,7 @@ screen game_choice:
     # Put the navigation columns in a three-wide grid.
     grid 3 1:
         xfill True
-        yalign 0.4
+        yalign 0.7
         # The left column.
         vbox:
             frame:
@@ -222,4 +222,7 @@ screen game_choice:
             frame:
                 has vbox 
                 textbutton _("Canfield") xfill True action Return(Canfield())
+            frame:
+                has vbox 
+                textbutton _("Perpetual Motion") xfill True action Return(Perpetual())
 
